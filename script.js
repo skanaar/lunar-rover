@@ -1,6 +1,7 @@
 var clock = new THREE.Clock();
 
 var engine = buildEngine(64, window.innerWidth, window.innerHeight);
+var quadtree;
 
 init(engine);
 animate();
@@ -25,13 +26,25 @@ function buildEngine(res, viewW, viewH) {
 	var geometry = new THREE.PlaneBufferGeometry(7500, 7500, res - 1, res - 1);
 	geometry.rotateX(- Math.PI / 2);
 
-	var quadtree = quad.build(res, res, 5);
-	quad.perlinFill(100, 50, quadtree);
+	quadtree = quad.build(res, res, 6);
+
+	// THIS
+	//
+	quad.perlinFill([100, 100, 100, 100], 2000, quadtree);
+	// OR
+	//
+	//for (var x = 0; x < res; x++) {
+	//	for (var y = 0; y < res; y++) {
+	//		quad.at(quadtree, x, y).value = data[x+y*res];
+	//	}
+	//}
+	//quad.precalculate(quadtree);
 
 	var vertices = geometry.attributes.position.array;
 	for (var i = 0; i < res; i++) {
 		for (var j = 0; j < res; j++) {
-			vertices[(i+j*res)*3 + 1] += Math.floor(quad.at(quadtree, i, j).value * 10) ;//data[i];
+			var lod_level = Math.floor(Math.max(Math.abs(i - res/2), Math.abs(j-res/2)) / 20);
+			vertices[(i+j*res)*3 + 1] += Math.floor(quad.at(quadtree, i, j, lod_level).value) ;//data[i];
 		}
 	}
 

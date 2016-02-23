@@ -24,7 +24,7 @@
   "indent": 2,
   "latedef": "nofunc",
   "laxcomma": true,
-  "maxcomplexity": 5,
+  "maxcomplexity": 6,
   "maxlen": 100,
   "maxparams": 4,
   "quotmark": "single",
@@ -32,5 +32,6 @@
   "strict": false,
   "undef": true,
   "unused": true,
-  "nonbsp": true
+  "nonbsp": true,
+  "nocomma": true
 }
