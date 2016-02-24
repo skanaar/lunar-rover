@@ -13,6 +13,12 @@ function getMarker() {
 	return new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
 }
 
+function getBall() {
+	var geometry = new THREE.IcosahedronGeometry(50, 2);
+	geometry.translate(0, 0, 0);
+	return new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: 0xffff00}));
+}
+
 function buildEngine(res, viewW, viewH) {
 	var camera = new THREE.PerspectiveCamera(60, viewW / viewH, 1, 20000);
 	var scene = new THREE.Scene();
@@ -44,19 +50,21 @@ function buildEngine(res, viewW, viewH) {
 	for (var i = 0; i < res; i++) {
 		for (var j = 0; j < res; j++) {
 			var lod_level = Math.floor(Math.max(Math.abs(i - res/2), Math.abs(j-res/2)) / 20);
-			vertices[(i+j*res)*3 + 1] += Math.floor(quad.at(quadtree, i, j, lod_level).value) ;//data[i];
+			vertices[(i+j*res)*3 + 1] = -Math.floor(quad.at(quadtree, i, j, lod_level).value) ;//data[i];
 		}
 	}
 
 	geometry.computeFaceNormals();
-	var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-		color: 0xffaa00,
-		wireframe: true
-	}));
+	geometry.computeVertexNormals();
+	var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color: 0xffaa00}));
 	scene.add(mesh);
 
 	var marker = getMarker();
 	scene.add(marker);
+	scene.add(getBall());
+	var sun = new THREE.DirectionalLight(0xffffff, 1);
+	sun.position.set(1000, 1000, 1000);
+	scene.add( sun );
 	var renderer = new THREE.WebGLRenderer();
 	renderer.setClearColor(0x444444);
 	renderer.setPixelRatio(window.devicePixelRatio);
