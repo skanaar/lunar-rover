@@ -15,6 +15,14 @@ var quad = {
 			max: 0
 		}
 	},
+	normal: function (node, x, y) {
+		var value = quad.at(node, x,y).value;
+		return vec.normalize(vec.Vec(
+			-(quad.at(node, x+1, y).value - value),
+			1,
+			-(quad.at(node, x, y+1).value - value)
+		));
+	},
 	at: function (node, x, y, maxDepth) {
 		maxDepth = maxDepth || 0;
 		if (node.level <= maxDepth || !node.nodes.length)
