@@ -1,6 +1,7 @@
 function Wheel(x, y, z, r){
   var normalForce = 70;
   var dampening = 0.92;
+  var springStep = 0.1;
   return {
     _drawObject: null,
     isTouching: false,
@@ -13,6 +14,11 @@ function Wheel(x, y, z, r){
       this.rotation -= dt*vec.dot(this.dir, this.vel)*2 / (Math.PI * this.r);
       vec.addTo(this.pos, this.vel, dt);
       if (!this.isTouching) vec.addTo(this.vel, gravity, dt);
+    },
+    apply: function (){
+      var angle = -Math.atan2(this.dir.z, this.dir.x);
+      this._drawObject.rotation.set(0, angle, this.rotation);
+      this._drawObject.position.set(this.pos.x, this.pos.y, this.pos.z);
     },
     _ground: function (terrain){
       var x = this.pos.x + 32;
@@ -51,9 +57,9 @@ function Wheel(x, y, z, r){
     addSpeed: function (dv){
       if (this.isTouching) vec.addTo(this.vel, this.dir, dv);
     },
-    turn: function (angle){
-      var dx = this.dir.x*Math.cos(angle) - this.dir.z*Math.sin(angle);
-      var dz = this.dir.x*Math.sin(angle) + this.dir.z*Math.cos(angle);
+    turn: function (dir, angle){
+      var dx = dir.x*Math.cos(angle) - dir.z*Math.sin(angle);
+      var dz = dir.x*Math.sin(angle) + dir.z*Math.cos(angle);
       this.dir = vec.Vec(dx, 0, dz);
     },
     drawObject: function (){
@@ -79,6 +85,20 @@ function Wheel(x, y, z, r){
       var angle = -Math.atan2(this.dir.z, this.dir.x);
       this._drawObject.rotation.set(0, angle, this.rotation);
       this._drawObject.position.set(this.pos.x, this.pos.y, this.pos.z);
+    },
+    attraction: function(peer, strenght, naturalDist){
+      var rv = vec.diff(this.vel, peer.vel);
+      var r = vec.diff(peer.pos, this.pos);
+      var d = vec.dist(this.pos, peer.pos);
+      var dot = vec.dot(rv, r);
+      // springing
+      var f = strenght*springStep / this.r;
+      vec.addTo(this.vel, vec.diff(peer.pos, this.pos), f*(d-naturalDist));
+      vec.addTo(peer.vel, vec.diff(this.pos, peer.pos), f*(d-naturalDist));
+      // dampening
+      var damp = 0.05 / this.r; // dampening should be size dependant
+      vec.addTo(this.vel, r, -damp*dot/(d*d));
+      vec.addTo(peer.vel, r, damp*dot/(d*d));
     }
   }
 }

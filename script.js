@@ -38,7 +38,7 @@ function buildEngine(res) {
 
   // THIS
   //
-  quad.perlinFill([0, 0, 0, 0], 20, quadtree);
+  quad.perlinFill([0, 0, 0, 0], 10, quadtree);
   // OR
   //
   // var data = generateHeight(res, res);
@@ -64,16 +64,27 @@ function buildEngine(res) {
   var sun = new THREE.DirectionalLight(0xffffff, 1);
   sun.position.set(1000, 1000, 1000);
 
-  var wheel = new Wheel(0, 10, 0, 2);
+  var wheelA = new Wheel( 1, 10,  1, 0.6);
+  var wheelB = new Wheel(-1, 10,  1, 0.6);
+  var wheelC = new Wheel( 1, 10, -1, 0.6);
+  var wheelD = new Wheel(-1, 10, -1, 0.6);
+  var rover = new Rover(wheelA, wheelB, wheelC, wheelD, 2);
 
   scene.add(mesh);
-  scene.add(wheel.drawObject());
   scene.add(sun);
+  scene.add(rover.drawObject());
+  scene.add(wheelA.drawObject());
+  scene.add(wheelB.drawObject());
+  scene.add(wheelC.drawObject());
+  scene.add(wheelD.drawObject());
+
+  rover.steer(0);
 
   return {
     scene: scene,
     mesh: mesh,
-    wheel: wheel,
+    wheels: [wheelA, wheelB, wheelC, wheelD],
+    rover: rover,
   	quadtree: quadtree
   };
 }
@@ -119,13 +130,13 @@ function render() {
 	var gravity = vec.Vec(0, -20, 0);
   var dt = clock.getDelta();
   viewer.controls.update(dt);
-  engine.wheel.update(dt, gravity);
-  engine.wheel.apply();
-  engine.wheel.collisions(dt, engine.quadtree);
-  viewer.renderer.render(engine.scene, viewer.camera);
 
-  if (keys[87]) engine.wheel.addSpeed(0.6);
-  if (keys[65]) engine.wheel.turn(-0.05); // left
-  if (keys[83]) engine.wheel.addSpeed(-0.6);
-  if (keys[68]) engine.wheel.turn(0.05); // right
+	engine.rover.update(dt, gravity, engine.quadtree);
+	engine.rover.apply();
+  if (keys[87]) engine.rover.addSpeed(0.6);
+  if (keys[83]) engine.rover.addSpeed(-0.6);
+  if (keys[65]) engine.rover.steer(-0.05); // left
+  if (keys[68]) engine.rover.steer(0.05); // right
+
+  viewer.renderer.render(engine.scene, viewer.camera);
 }

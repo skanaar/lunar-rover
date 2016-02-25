@@ -7,7 +7,8 @@
     "quad": true,
     "ImprovedNoise": false,
     "THREE": true,
-    "Wheel": true
+    "Wheel": true,
+    "Rover": true
   },
   "mocha": true,
   "browser": true,
@@ -23,7 +24,7 @@
   "indent": 2,
   "latedef": "nofunc",
   "laxcomma": true,
-  "maxcomplexity": 7,
+  "maxcomplexity": 10,
   "maxlen": 100,
   "maxparams": 4,
   "quotmark": "single",
