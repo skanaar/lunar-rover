@@ -21,8 +21,8 @@ function Wheel(x, y, z, r){
       this._drawObject.position.set(this.pos.x, this.pos.y, this.pos.z);
     },
     _ground: function (terrain){
-      var x = this.pos.x + 32;
-      var z = this.pos.z + 32;
+      var x = this.pos.x + terrain.w/2;
+      var z = this.pos.z + terrain.h/2;
       var a = quad.at(terrain, x, z).value;
       var b = quad.at(terrain, x, z).value;
       var c = quad.at(terrain, x, z).value;

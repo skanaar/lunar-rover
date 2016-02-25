@@ -4,7 +4,7 @@ var keys = {};
 var viewer = buildViewer(window.innerWidth,
                          window.innerHeight,
                          window.devicePixelRatio)
-var engine = buildEngine(64, viewer);
+var engine = buildEngine(128, viewer);
 
 init(viewer);
 animate();
@@ -15,8 +15,8 @@ function buildViewer(viewW, viewH, pixelRatio) {
   controls.target.set(0, 0, 0);
   controls.userPanSpeed = 100;
   controls.target.y = 0;
-  camera.position.y = 0;
-  camera.position.x = 32;
+  camera.position.y = 16;
+  camera.position.x = 50;
   var renderer = new THREE.WebGLRenderer();
   renderer.setClearColor(0x444444);
   renderer.setPixelRatio(pixelRatio);
@@ -30,15 +30,11 @@ function buildViewer(viewW, viewH, pixelRatio) {
 }
 
 function buildEngine(res) {
-  var scene = new THREE.Scene();
-  var geometry = new THREE.PlaneBufferGeometry(res, res, res-1, res-1);
-  geometry.rotateX(- Math.PI / 2);
-
-  var quadtree = quad.build(res, res, 6);
+  var quadtree = quad.build(res, res, 7);
 
   // THIS
   //
-  quad.perlinFill([0, 0, 0, 0], 10, quadtree);
+  quad.perlinFill([0, 0, 0, 0], 12, quadtree);
   // OR
   //
   // var data = generateHeight(res, res);
@@ -49,10 +45,40 @@ function buildEngine(res) {
   //}
   //quad.precalculate(quadtree);
 
+  function craterOffset(height, x){
+  	x = Math.min(x, 1);
+  	return height*(Math.pow(Math.sin(x*x*3),2) + (x*x-1)*0.3);
+  }
+
+  function addCrater(terrain, x, y, r, height){
+	  for (var i = -r; i < r; i++) {
+	    for (var j = -r; j < r; j++) {
+	    	if (j+y<1 || j+y>res-1 || i+x<1 || i+x>res-1) continue;
+	    	var offset = craterOffset(height, Math.sqrt(i*i+j*j)/r);
+	      quad.at(terrain, x+i, y+j).value += offset;
+	    }
+	  }
+  }
+
+  function rand(min, max){
+  	return Math.random() * (max-min) + min;
+  }
+
+  for (var c = 0; c<25; c++){
+  	var size = 20 * Math.pow(rand(0.5,1), 2);
+  	addCrater(quadtree, rand(-10,res+10), rand(-10,res+10), size, size*rand(0.02,1/6))
+  }
+
+  quad.precalculate(quadtree);
+
+  var scene = new THREE.Scene();
+  var geometry = new THREE.PlaneBufferGeometry(res, res, res-1, res-1);
+  geometry.rotateX(- Math.PI / 2);
+
   var vertices = geometry.attributes.position.array;
   for (var i = 0; i < res; i++) {
     for (var j = 0; j < res; j++) {
-      vertices[(i+j*res)*3 + 1] = quad.at(quadtree, i, j).value;//data[i];
+      vertices[(i+j*res)*3 + 1] = quad.at(quadtree, i, j).value;
     }
   }
 
