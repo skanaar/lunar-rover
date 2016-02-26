@@ -31,6 +31,17 @@ var quad = {
 		var j = y < node.h/2 ? 0 : 1;
 		return quad.at(node.nodes[i+2*j], x - i*node.w/2, y - j*node.h/2, maxDepth);
 	},
+	valueAt: function (node, x, z) {
+    x = x + node.w/2;
+    z = z + node.h/2;
+    var a = quad.at(node, x, z).value;
+    var b = quad.at(node, x, z).value;
+    var c = quad.at(node, x, z).value;
+    var d = quad.at(node, x, z).value;
+    var u = x % 1;
+    var v = z % 1;
+    return (a*u + b*(1-u))*v + (c*u + d*(1-u))*(1-v);
+	},
 	randomFill: function (value, range, quadtree) {
 		quadtree.value = value;
 		quadtree.nodes.forEach(function (e){

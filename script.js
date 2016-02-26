@@ -6,6 +6,8 @@ var viewer = buildViewer(window.innerWidth,
                          window.devicePixelRatio)
 var engine = buildEngine(128, viewer);
 
+var cameraPos = vec.Vec();
+
 init(viewer);
 animate();
 
@@ -18,9 +20,11 @@ function buildViewer(viewW, viewH, pixelRatio) {
   camera.position.y = 16;
   camera.position.x = 50;
   var renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor(0x444444);
+  renderer.setClearColor(0x000000);
   renderer.setPixelRatio(pixelRatio);
   renderer.setSize(viewW, viewH);
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFShadowMap;
   return {
     camera: camera,
     controls: controls,
@@ -47,7 +51,7 @@ function buildEngine(res) {
 
   function craterOffset(height, x){
   	x = Math.min(x, 1);
-  	return height*(Math.pow(Math.sin(x*x*3),2) + (x*x-1)*0.3);
+  	return height*(Math.pow(Math.sin(x*x*3),2) + (x*x-1)*1.5);
   }
 
   function addCrater(terrain, x, y, r, height){
@@ -66,7 +70,8 @@ function buildEngine(res) {
 
   for (var c = 0; c<25; c++){
   	var size = 20 * Math.pow(rand(0.5,1), 2);
-  	addCrater(quadtree, rand(-10,res+10), rand(-10,res+10), size, size*rand(0.02,1/6))
+  	var depth = size*rand(0.02,1/6);
+  	addCrater(quadtree, rand(-10,res+10), rand(-10,res+10), size, depth)
   }
 
   quad.precalculate(quadtree);
@@ -84,11 +89,21 @@ function buildEngine(res) {
 
   geometry.computeFaceNormals();
   geometry.computeVertexNormals();
-  var material = new THREE.MeshPhongMaterial({color: 0xffaa00});
+  var material = new THREE.MeshPhongMaterial({color: 0x888888});
   var mesh = new THREE.Mesh(geometry, material);
+	mesh.receiveShadow = true;
 
-  var sun = new THREE.DirectionalLight(0xffffff, 1);
-  sun.position.set(1000, 1000, 1000);
+  var sun = new THREE.SpotLight(0xffffff, 1, 0, Math.PI / 2);
+  sun.position.set(100, 100, 100);
+  sun.target.position.set(0, 0, 0);
+
+	sun.castShadow = true;
+	sun.shadowCameraNear = 100;
+	sun.shadowCameraFar = 1500;
+	sun.shadowCameraFov = 50;
+	sun.shadowBias = 0.0001;
+	sun.shadowMapWidth = 2048;
+	sun.shadowMapHeight = 2048;
 
   var wheelA = new Wheel( 1, 10,  1, 0.6);
   var wheelB = new Wheel(-1, 10,  1, 0.6);
@@ -106,9 +121,15 @@ function buildEngine(res) {
 
   rover.steer(0);
 
+  var markerGeo = new THREE.SphereGeometry(0.1, 4, 4);
+	var markerMaterial = new THREE.MeshBasicMaterial({color: 0xffff00});
+	var marker = new THREE.Mesh(markerGeo, markerMaterial);
+	scene.add(marker);
+
   return {
     scene: scene,
     mesh: mesh,
+    marker: marker,
     wheels: [wheelA, wheelB, wheelC, wheelD],
     rover: rover,
   	quadtree: quadtree
@@ -153,16 +174,30 @@ function animate() {
 }
 
 function render() {
-	var gravity = vec.Vec(0, -20, 0);
+	var gravity = vec.Vec(0, -400, 0);
   var dt = clock.getDelta();
   viewer.controls.update(dt);
 
+  var x = engine.rover.obj.pos.x;
+  var z = engine.rover.obj.pos.z;
+  engine.marker.position.set(x, quad.valueAt(engine.quadtree, x, z), z);
+
+  //var p = vec.clone(engine.rover.obj.pos);
+  //var pos = vec.add(p, vec.Vec(0,0,-10));
+  //vec.multTo(cameraPos, 0.95);
+  //vec.addTo(cameraPos, pos, 0.05);
+  //viewer.camera.position.set(cameraPos.x, cameraPos.y + 5, cameraPos.z);
+  //viewer.camera.lookAt(p.x, p.y-5, p.z);
+
+  solveEuler(dt, engine.wheels.map(e => e.obj));
+  //solveLeapfrog(dt, engine.wheels.map(e => e.obj));
+
 	engine.rover.update(dt, gravity, engine.quadtree);
 	engine.rover.apply();
-  if (keys[87]) engine.rover.addSpeed(0.6);
-  if (keys[83]) engine.rover.addSpeed(-0.6);
-  if (keys[65]) engine.rover.steer(-0.05); // left
-  if (keys[68]) engine.rover.steer(0.05); // right
+  if (keys[87]) engine.rover.addSpeed(20);
+  if (keys[83]) engine.rover.addSpeed(-20);
+  if (keys[65]) engine.rover.steer(-0.075); // left
+  if (keys[68]) engine.rover.steer(0.075); // right
 
   viewer.renderer.render(engine.scene, viewer.camera);
 }

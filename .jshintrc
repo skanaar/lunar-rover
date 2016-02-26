@@ -8,7 +8,8 @@
     "ImprovedNoise": false,
     "THREE": true,
     "Wheel": true,
-    "Rover": true
+    "Rover": true,
+    "Entity": true
   },
   "mocha": true,
   "browser": true,

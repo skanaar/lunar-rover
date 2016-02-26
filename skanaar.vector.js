@@ -1,7 +1,10 @@
 var vec = {
-	Vec: function (x, y, z){
-		return { x: x, y: y, z: z }
-	},
+    Vec: function (x, y, z){
+        return { x: x||0, y: y||0, z: z||0 }
+    },
+    clone: function (v){
+        return { x: v.x, y: v.y, z: v.z }
+    },
     dist: function (a,b){
     	return vec.mag(vec.diff(a,b))
     },

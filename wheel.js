@@ -1,61 +1,53 @@
 function Wheel(x, y, z, r){
-  var normalForce = 70;
-  var dampening = 0.92;
-  var springStep = 0.1;
+  var groundForce = 1500;
+  var groundFriction = 0.98;
+  var springConstant = 2;
   return {
     _drawObject: null,
     isTouching: false,
-    pos: vec.Vec(x, y, z),
-    vel: vec.Vec(0, 0, 0),
+    obj: Entity(1, vec.Vec(x, y, z)),
     dir: vec.Vec(1, 0, 0),
     r: r,
     rotation: 0,
     update: function (dt, gravity){
-      this.rotation -= dt*vec.dot(this.dir, this.vel)*2 / (Math.PI * this.r);
-      vec.addTo(this.pos, this.vel, dt);
-      if (!this.isTouching) vec.addTo(this.vel, gravity, dt);
+      var speedForward = vec.dot(this.dir, this.obj.vel);
+      this.rotation -= dt*speedForward*2 / (Math.PI * this.r);
+      if (!this.isTouching)
+        vec.addTo(this.obj.force, gravity, dt*this.obj.mass);
     },
     apply: function (){
       var angle = -Math.atan2(this.dir.z, this.dir.x);
       this._drawObject.rotation.set(0, angle, this.rotation);
-      this._drawObject.position.set(this.pos.x, this.pos.y, this.pos.z);
+      this._drawObject.position.set(this.obj.x, this.obj.y, this.obj.z);
     },
     _ground: function (terrain){
-      var x = this.pos.x + terrain.w/2;
-      var z = this.pos.z + terrain.h/2;
-      var a = quad.at(terrain, x, z).value;
-      var b = quad.at(terrain, x, z).value;
-      var c = quad.at(terrain, x, z).value;
-      var d = quad.at(terrain, x, z).value;
-      var u = x % 1;
-      var v = z % 1;
-      return (a*u + b*(1-u))*v + (c*u + d*(1-u))*(1-v);
+      return quad.valueAt(terrain, this.obj.pos.x, this.obj.pos.z);
     },
     collisions: function (dt, terrain){
-      var groundNormal = quad.normal(terrain, this.pos.x+32, this.pos.z+32);
-      var dh = this.pos.y - this._ground(terrain) - this.r;
+      var groundNormal = quad.normal(terrain, this.obj.x+32, this.obj.z+32);
+      var dh = this.obj.y - this._ground(terrain) - this.r;
       this.isTouching = dh < 0;
-      //this._traversalFriction(groundNormal);
-      this._stopSurfacePenetration(dt, dh, groundNormal);
+      if (this.isTouching){
+        this._traversalFriction(dt, dh, groundNormal);
+        this._stopSurfacePenetration(dt, dh, groundNormal);
+      }
     },
     _stopSurfacePenetration: function (dt, dh, groundNormal){
-      if (this.isTouching){
-        //var dot = vec.dot(this.vel, groundNormal);
-        //vec.addTo(this.vel, groundNormal, dt*dot);
-        vec.addTo(this.vel, groundNormal, dt*dh*dh*normalForce);
-        vec.multTo(this.vel, dampening);
-      }
+      vec.addTo(this.obj.force, groundNormal, dt*dh*dh*groundForce);
+      //var dot = vec.dot(this.obj.vel, groundNormal);
+      //vec.addTo(this.obj.vel, groundNormal, 0.95*dot);
+      // state modification outside integrator
+      vec.multTo(this.obj.vel, groundFriction);
+      vec.addTo(this.obj.pos, groundNormal, -dh*0.25);
     },
-    _traversalFriction: function (groundNormal){
+    _traversalFriction: function (dt, dh, groundNormal){
       //transversal friction to damp out sliding
-      if(this.isTouching){
-        var transVec = vec.cross(groundNormal, this.dir);
-        var dot = vec.dot(this.vel, transVec);
-        vec.addTo(this.vel, transVec, -dot);
-      }
+      var trans = vec.normalize(vec.cross(groundNormal, this.dir));
+      var slide = vec.mult(trans, vec.dot(trans, this.obj.vel));
+      vec.addTo(this.obj.force, slide, -groundFriction);
     },
     addSpeed: function (dv){
-      if (this.isTouching) vec.addTo(this.vel, this.dir, dv);
+      if (this.isTouching) vec.addTo(this.obj.force, this.dir, dv);
     },
     turn: function (dir, angle){
       var dx = dir.x*Math.cos(angle) - dir.z*Math.sin(angle);
@@ -64,41 +56,38 @@ function Wheel(x, y, z, r){
     },
     drawObject: function (){
       var profile = [
-        new THREE.Vector2(0,          this.r*-0.2),
-        new THREE.Vector2(this.r*0.6, this.r*-0.5),
+        new THREE.Vector2(this.r*0.4, this.r*-0),
         new THREE.Vector2(this.r*0.8, this.r*-0.5),
         new THREE.Vector2(this.r*1,   this.r*-0.3),
         new THREE.Vector2(this.r*1,   this.r* 0.3),
         new THREE.Vector2(this.r*0.8, this.r* 0.5),
-        new THREE.Vector2(this.r*0.6, this.r* 0.5),
-        new THREE.Vector2(0,          this.r* 0.2),
+        new THREE.Vector2(this.r*0.4, this.r* 0),
       ];
       var geometry = new THREE.LatheGeometry(profile);
       var m = new THREE.Matrix4();
       m.makeRotationX(Math.PI/2);
       geometry.applyMatrix(m);
-      var material = new THREE.MeshLambertMaterial({color: 0xffff00});
+      var material = new THREE.MeshLambertMaterial({color: 0xdd8800});
+      material.shading = THREE.FlatShading;
       this._drawObject = new THREE.Mesh(geometry, material);
+      this._drawObject.castShadow = true;
+      this._drawObject.receiveShadow = true;
       return this._drawObject;
     },
-    apply: function (){
-      var angle = -Math.atan2(this.dir.z, this.dir.x);
-      this._drawObject.rotation.set(0, angle, this.rotation);
-      this._drawObject.position.set(this.pos.x, this.pos.y, this.pos.z);
-    },
-    attraction: function(peer, strenght, naturalDist){
-      var rv = vec.diff(this.vel, peer.vel);
-      var r = vec.diff(peer.pos, this.pos);
-      var d = vec.dist(this.pos, peer.pos);
-      var dot = vec.dot(rv, r);
+    attraction: function(peer, dt, naturalDist){
+      var r = vec.diff(peer.obj.pos, this.obj.pos);
+      var d = vec.mag(r);
       // springing
-      var f = strenght*springStep / this.r;
-      vec.addTo(this.vel, vec.diff(peer.pos, this.pos), f*(d-naturalDist));
-      vec.addTo(peer.vel, vec.diff(this.pos, peer.pos), f*(d-naturalDist));
+      var f = springConstant * (d-naturalDist) / this.r;
+      vec.addTo(this.obj.force, r,  f);
+      vec.addTo(peer.obj.force, r, -f);
       // dampening
-      var damp = 0.05 / this.r; // dampening should be size dependant
-      vec.addTo(this.vel, r, -damp*dot/(d*d));
-      vec.addTo(peer.vel, r, damp*dot/(d*d));
+      var relativeVel = vec.diff(peer.obj.vel, this.obj.vel);
+      var parallellVel = vec.mult(vec.normalize(r), vec.dot(relativeVel, r));
+      var speed = vec.mag(parallellVel);
+      var damp = 1 - 1/(1+speed*speed);
+      vec.addTo(peer.obj.vel, parallellVel,-dt*damp);
+      vec.addTo(this.obj.vel, parallellVel, dt*damp);
     }
   }
 }
