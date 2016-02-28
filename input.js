@@ -1,0 +1,21 @@
+var input = {
+  keys: {},
+  NUMBER: {},
+  onNumber: function (action) {
+    document.addEventListener('keydown', function(e) {
+      var c = e.keyCode;
+      if (c >= 48 && c <= 57) action(c - 48);
+    });
+  },
+  get up () { return this.keys[87] },
+  get down () { return this.keys[83] },
+  get left () { return this.keys[65] },
+  get right () { return this.keys[68] }
+}
+
+document.addEventListener('keydown', function(e) {
+  input.keys[e.keyCode] = true;
+});
+document.addEventListener('keyup', function(e) {
+  input.keys[e.keyCode] = false;
+});

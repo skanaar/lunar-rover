@@ -9,7 +9,13 @@ var vec = {
     	return vec.mag(vec.diff(a,b))
     },
     add: function (a,b){
-    	return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }
+        return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }
+    },
+    sum: function (vectors){
+        return vectors.reduce(vec.add);
+    },
+    average: function (vectors){
+        return vec.mult(vec.sum(vectors), 1/vectors.length);
     },
     diff: function (a,b){
     	return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z }

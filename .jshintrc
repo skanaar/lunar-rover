@@ -9,7 +9,8 @@
     "THREE": true,
     "Wheel": true,
     "Rover": true,
-    "Entity": true
+    "Entity": true,
+    "input": true
   },
   "mocha": true,
   "browser": true,

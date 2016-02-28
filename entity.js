@@ -16,8 +16,13 @@ function Entity(mass, pos, vel, force){
 
 function solveEuler(dt, entities){
   entities.forEach(function (e){
-    vec.addTo(e.pos, e.vel, dt);
     vec.addTo(e.vel, e.force, dt/e.mass);
+    vec.addTo(e.pos, e.vel, dt);
+  })
+}
+
+function resetForces(entities){
+  entities.forEach(function (e){
     vec.multTo(e.force, 0);
   })
 }
