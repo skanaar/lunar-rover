@@ -3,21 +3,18 @@ var clock = new THREE.Clock();
 var viewer = buildViewer(window.innerWidth,
                          window.innerHeight,
                          window.devicePixelRatio)
-var engine = buildEngine(128, viewer);
+var engine = buildEngine(256, viewer);
 
 var cameraPos = vec.Vec();
 var timestep = 2;
 var showDebug = false;
+var isPaused = false;
 
 init(viewer);
 animate();
 
 function buildViewer(viewW, viewH, pixelRatio) {
   var camera = new THREE.PerspectiveCamera(60, viewW / viewH, 1, 20000);
-  var controls = new THREE.OrbitControls(camera);
-  controls.target.set(0, 0, 0);
-  controls.userPanSpeed = 100;
-  controls.target.y = 0;
   camera.position.y = 16;
   camera.position.x = 50;
   var renderer = new THREE.WebGLRenderer();
@@ -28,14 +25,14 @@ function buildViewer(viewW, viewH, pixelRatio) {
 	renderer.shadowMap.type = THREE.PCFShadowMap;
   return {
     camera: camera,
-    controls: controls,
+    //controls: controls,
     renderer: renderer,
     render: renderer.render.bind(renderer, camera)
   };
 }
 
 function buildEngine(res) {
-  var quadtree = generateLandscape(res, 7);
+  var quadtree = generateLandscape(res, 8);
 
   var scene = new THREE.Scene();
   var geometry = new THREE.PlaneBufferGeometry(res, res, res-1, res-1);
@@ -55,13 +52,13 @@ function buildEngine(res) {
 	mesh.receiveShadow = true;
 
   var sun = new THREE.SpotLight(0xffffff, 1, 0, Math.PI / 2);
-  sun.position.set(100, 100, 100);
-  sun.target.position.set(0, 0, 0);
+  sun.position.set(200, 50, 200);
+  sun.target.position.set(50, 0, 50);
 
 	sun.castShadow = true;
 	sun.shadow.camera.near = 100;
 	sun.shadow.camera.far = 1500;
-	sun.shadow.camera.fov = 50;
+	sun.shadow.camera.fov = 60;
 	sun.shadow.bias = 0.0001;
 	sun.shadow.mapSize.width = 2048;
 	sun.shadow.mapSize.height = 2048;
@@ -109,6 +106,7 @@ function init(viewer) {
   window.addEventListener('resize', onWindowResize);
   input.onNumber(function(i) { timestep = Math.exp(i/4) / 2 });
   input.on('i', function() { showDebug = !showDebug });
+  input.on('p', function() { isPaused = !isPaused });
 }
 
 function onWindowResize() {
@@ -134,11 +132,7 @@ function simulate(dt, iterations) {
   }
 }
 
-function update() {
-  var dt = clock.getDelta();
-  if (dt > 1) dt = 0.015; // pause simulation in background tabs
-  viewer.controls.update(dt);
-
+function updateDebugInfo() {
   var x = engine.rover.obj.pos.x;
   var z = engine.rover.obj.pos.z;
   var y = quad.valueAt(engine.quadtree, x, z);
@@ -149,22 +143,36 @@ function update() {
     engine.marker.position.set(0, -100, 0);
     engine.normalMarker.position.set(0, -100, 0);
   }
+}
 
-  //var p = vec.clone(engine.rover.obj.pos);
-  //var pos = vec.add(p, vec.Vec(0,0,-10));
-  //vec.multTo(cameraPos, 0.95);
-  //vec.addTo(cameraPos, pos, 0.05);
-  //viewer.camera.position.set(cameraPos.x, cameraPos.y + 5, cameraPos.z);
-  //viewer.camera.lookAt(p.x, p.y-5, p.z);
-  simulate(dt, 4);
+function updateChaseCam() {
+  var p = vec.clone(engine.rover.obj.pos);
+  var dir = engine.rover.dir;
+  var pos = vec.add(p, vec.Vec(dir.x*-10, 10, dir.z*-10));
+  vec.multTo(cameraPos, 0.98);
+  vec.addTo(cameraPos, pos, 0.02);
+  viewer.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+  viewer.camera.lookAt(new THREE.Vector3(p.x, p.y, p.z));
+}
 
-  engine.rover.apply();
+function update() {
+  var dt = clock.getDelta();
+  if (dt > 1) dt = 0.015; // pause simulation in background tabs
 
-  if (input.up) engine.rover.addSpeed(20);
-  if (input.down) engine.rover.addSpeed(-20);
-  if (input.left) engine.rover.steer(-0.1);
-  if (input.right) engine.rover.steer(0.1);
-  engine.rover.steerAhead(0.1);
+  if (!isPaused){
+    updateDebugInfo();
+    updateChaseCam();
+
+    simulate(dt, 4);
+
+    engine.rover.apply();
+
+    if (input.up) engine.rover.addSpeed(20);
+    if (input.down) engine.rover.addSpeed(-20);
+    if (input.left) engine.rover.steer(-0.1);
+    if (input.right) engine.rover.steer(0.1);
+    engine.rover.steerAhead(0.1);
+  }
 
   viewer.renderer.render(engine.scene, viewer.camera);
 }

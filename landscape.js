@@ -1,20 +1,5 @@
 function generateLandscape(res, subdivs){
 
-  var quadtree = quad.build(res, res, subdivs);
-
-  // THIS
-  //
-  quad.perlinFill([0, 0, 0, 0], 14, quadtree);
-  // OR
-  //
-  // var data = generateHeight(res, res);
-  //for (var x = 0; x < res; x++) {
-  //  for (var y = 0; y < res; y++) {
-  //    quad.at(quadtree, x, y).value = data[x+y*res];
-  //  }
-  //}
-  //quad.precalculate(quadtree);
-
   function craterOffset(height, x){
     x = Math.min(x, 1);
     return height*(Math.pow(Math.sin(x*x*3),2) + (x*x-1)*1.5);
@@ -34,9 +19,24 @@ function generateLandscape(res, subdivs){
     return Math.random() * (max-min) + min;
   }
 
+  var quadtree = quad.build(res, res, subdivs);
+
+  // THIS
+  //
+  quad.perlinFill([0, 0, 0, 0], 24, quadtree);
+  // OR
+  //
+  // var data = generateHeight(res, res);
+  //for (var x = 0; x < res; x++) {
+  //  for (var y = 0; y < res; y++) {
+  //    quad.at(quadtree, x, y).value = data[x+y*res];
+  //  }
+  //}
+  //quad.precalculate(quadtree);
+
   for (var c = 0; c<35; c++){
     var size = 20 * Math.pow(rand(0.5,1), 2);
-    var depth = size*rand(0.02,1/6);
+    var depth = size*rand(0.02,0.2);
     addCrater(quadtree, rand(-10,res+10), rand(-10,res+10), size, depth)
   }
 
