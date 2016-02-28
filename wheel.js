@@ -1,10 +1,12 @@
 function Wheel(x, y, z, r){
   var groundForce = 1500;
-  var groundFriction = 0.98;
+  var groundFriction = 0.5;
+  var tireGrip = 2.9;
   var springConstant = 2;
   return {
     _drawObject: null,
     isTouching: false,
+    isBraking: false,
     obj: Entity(1, vec.Vec(x, y, z)),
     dir: vec.Vec(1, 0, 0),
     r: r,
@@ -12,39 +14,41 @@ function Wheel(x, y, z, r){
     update: function (dt, gravity){
       var speedForward = vec.dot(this.dir, this.obj.vel);
       this.rotation -= dt*speedForward*2 / (Math.PI * this.r);
-      if (!this.isTouching)
-        vec.addTo(this.obj.force, gravity, dt*this.obj.mass);
+      vec.addTo(this.obj.force, gravity, dt*this.obj.mass);
     },
     apply: function (){
       var angle = -Math.atan2(this.dir.z, this.dir.x);
       this._drawObject.rotation.set(0, angle, this.rotation);
       this._drawObject.position.set(this.obj.x, this.obj.y, this.obj.z);
     },
-    _ground: function (terrain){
-      return quad.valueAt(terrain, this.obj.pos.x, this.obj.pos.z);
-    },
     collisions: function (dt, terrain){
-      var groundNormal = quad.normal(terrain, this.obj.x+32, this.obj.z+32);
-      var dh = this.obj.y - this._ground(terrain) - this.r;
+      var groundNormal = quad.normalAt(terrain, this.obj.pos.x, this.obj.pos.z);
+      var groundHeight = quad.valueAt(terrain, this.obj.pos.x, this.obj.pos.z);
+      var dh = this.obj.y - groundHeight - this.r;
       this.isTouching = dh < 0;
       if (this.isTouching){
         this._traversalFriction(dt, dh, groundNormal);
         this._stopSurfacePenetration(dt, dh, groundNormal);
+        this._groundFriction();
       }
     },
     _stopSurfacePenetration: function (dt, dh, groundNormal){
-      vec.addTo(this.obj.force, groundNormal, dt*dh*dh*groundForce);
-      //var dot = vec.dot(this.obj.vel, groundNormal);
-      //vec.addTo(this.obj.vel, groundNormal, 0.95*dot);
+      vec.addTo(this.obj.force, groundNormal, dh*dh*groundForce);
       // state modification outside integrator
-      vec.multTo(this.obj.vel, groundFriction);
       vec.addTo(this.obj.pos, groundNormal, -dh*0.25);
+    },
+    _groundFriction: function (){
+      var speed = vec.mag(this.obj.vel);
+      var vDir = vec.normalize(this.obj.vel);
+      vec.addTo(this.obj.force, vDir, -groundFriction*speed);
+      if (this.isBraking)
+        vec.addTo(this.obj.force, vDir, -(groundFriction+tireGrip)*speed);
     },
     _traversalFriction: function (dt, dh, groundNormal){
       //transversal friction to damp out sliding
       var trans = vec.normalize(vec.cross(groundNormal, this.dir));
       var slide = vec.mult(trans, vec.dot(trans, this.obj.vel));
-      vec.addTo(this.obj.force, slide, -groundFriction);
+      vec.addTo(this.obj.force, slide, -tireGrip);
     },
     addSpeed: function (dv){
       if (this.isTouching) vec.addTo(this.obj.force, this.dir, dv);

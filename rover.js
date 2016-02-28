@@ -5,7 +5,6 @@ function Rover(wheelA, wheelB, wheelC, wheelD, width){
     obj: Entity(0, vec.Vec(0,0,0)),
     dir: vec.Vec(1,0,0),
     update: function (dt, gravity, terrain){
-      this.turn *= 0.9;
       this.apply();
       [wheelA, wheelB, wheelC, wheelD].forEach(function (wheel){
         wheel.update(dt, gravity);
@@ -34,8 +33,8 @@ function Rover(wheelA, wheelB, wheelC, wheelD, width){
       var shape = new THREE.Shape([
         new THREE.Vector2( width/2,-width/16),
         new THREE.Vector2( width/2, 0),
-        new THREE.Vector2( width/4, width/8),
-        new THREE.Vector2(-width/4, width/8),
+        new THREE.Vector2( width/8, width/8),
+        new THREE.Vector2(-width/1.8, width/8),
         new THREE.Vector2(-width/2, 0),
         new THREE.Vector2(-width/2,-width/16)
       ]);
@@ -85,6 +84,9 @@ function Rover(wheelA, wheelB, wheelC, wheelD, width){
       ]);
       var speed = vec.mag(vel);
       this.turn += angle / (1+speed/20);
+    },
+    steerAhead: function (amount){
+      this.turn *= 1 - amount;
     }
   }
 }

@@ -7,6 +7,12 @@ var input = {
       if (c >= 48 && c <= 57) action(c - 48);
     });
   },
+  on: function (character, action) {
+    document.addEventListener('keydown', function(e) {
+      var c = String.fromCharCode(e.keyCode).toLowerCase();
+      if (c === character) action(c);
+    });
+  },
   get up () { return this.keys[87] },
   get down () { return this.keys[83] },
   get left () { return this.keys[65] },

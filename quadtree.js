@@ -15,14 +15,6 @@ var quad = {
 			max: 0
 		}
 	},
-	normal: function (node, x, y) {
-		var value = quad.at(node, x,y).value;
-		return vec.normalize(vec.Vec(
-			-(quad.at(node, x+1, y).value - value),
-			1,
-			-(quad.at(node, x, y+1).value - value)
-		));
-	},
 	at: function (node, x, y, maxDepth) {
 		maxDepth = maxDepth || 0;
 		if (node.level <= maxDepth || !node.nodes.length)
@@ -34,13 +26,31 @@ var quad = {
 	valueAt: function (node, x, z) {
     x = x + node.w/2;
     z = z + node.h/2;
-    var a = quad.at(node, x, z).value;
-    var b = quad.at(node, x, z).value;
-    var c = quad.at(node, x, z).value;
-    var d = quad.at(node, x, z).value;
+    var a = quad.at(node, x,   z).value;
+    var b = quad.at(node, x+1, z).value;
+    var c = quad.at(node, x,   z+1).value;
+    var d = quad.at(node, x+1, z+1).value;
     var u = x % 1;
     var v = z % 1;
-    return (a*u + b*(1-u))*v + (c*u + d*(1-u))*(1-v);
+    return (a*(1-u) + b*u)*(1-v) + (c*(1-u) + d*u)*v;
+	},
+	normalAt2: function (node, x, z) {
+    x = x + node.w/2;
+    z = z + node.h/2;
+		var value = quad.at(node, x, z).value;
+		return vec.normalize(vec.Vec(
+			-(quad.at(node, x+1, z).value - value),
+			1,
+			-(quad.at(node, x, z+1).value - value)
+		));
+	},
+	normalAt: function (node, x, y) {
+		var value = quad.valueAt(node, x,y);
+		return vec.normalize(vec.Vec(
+			-(quad.valueAt(node, x+1, y) - value),
+			1,
+			-(quad.valueAt(node, x, y+1) - value)
+		));
 	},
 	randomFill: function (value, range, quadtree) {
 		quadtree.value = value;
