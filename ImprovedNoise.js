@@ -39,33 +39,44 @@ var ImprovedNoise = function () {
 
 	}
 
-	return {
+	function noise(x, y, z) {
 
-		noise: function (x, y, z) {
+		var floorX = ~~x, floorY = ~~y, floorZ = ~~z;
 
-			var floorX = ~~x, floorY = ~~y, floorZ = ~~z;
+		var X = floorX & 255, Y = floorY & 255, Z = floorZ & 255;
 
-			var X = floorX & 255, Y = floorY & 255, Z = floorZ & 255;
+		x -= floorX;
+		y -= floorY;
+		z -= floorZ;
 
-			x -= floorX;
-			y -= floorY;
-			z -= floorZ;
+		var xMinus1 = x - 1, yMinus1 = y - 1, zMinus1 = z - 1;
 
-			var xMinus1 = x - 1, yMinus1 = y - 1, zMinus1 = z - 1;
+		var u = fade(x), v = fade(y), w = fade(z);
 
-			var u = fade(x), v = fade(y), w = fade(z);
+		var A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
 
-			var A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
+		return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z), 
+						grad(p[BA], xMinus1, y, z)),
+					lerp(u, grad(p[AB], x, yMinus1, z),
+						grad(p[BB], xMinus1, yMinus1, z))),
+				lerp(v, lerp(u, grad(p[AA + 1], x, y, zMinus1),
+						grad(p[BA + 1], xMinus1, y, z - 1)),
+					lerp(u, grad(p[AB + 1], x, yMinus1, zMinus1),
+						grad(p[BB + 1], xMinus1, yMinus1, zMinus1))));
 
-			return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z), 
-							grad(p[BA], xMinus1, y, z)),
-						lerp(u, grad(p[AB], x, yMinus1, z),
-							grad(p[BB], xMinus1, yMinus1, z))),
-					lerp(v, lerp(u, grad(p[AA + 1], x, y, zMinus1),
-							grad(p[BA + 1], xMinus1, y, z - 1)),
-						lerp(u, grad(p[AB + 1], x, yMinus1, zMinus1),
-							grad(p[BB + 1], xMinus1, yMinus1, zMinus1))));
+	}
 
+	return function(x, y, scale, octaves, falloff){
+		octaves = octaves || 6;
+		falloff = falloff || 2;
+		scale = scale || 1;
+		var amp = 1/falloff;
+		var value = 0;
+		for(var i=0; i<octaves; i++) {
+			value += amp * noise(x/scale, y/scale, 0.5);
+			amp *= falloff;
+			scale *= 2;
 		}
+		return value;
 	}
 };

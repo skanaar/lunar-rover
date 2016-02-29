@@ -31,12 +31,13 @@ function generateLandscape(res, subdivs){
   // OR
   //
   // var data = generateHeight(res, res);
-  //for (var x = 0; x < res; x++) {
-  //  for (var y = 0; y < res; y++) {
-  //    quad.at(quadtree, x, y).value = data[x+y*res];
-  //  }
-  //}
-  //quad.precalculate(quadtree);
+  var perlin = ImprovedNoise();
+  for (var x = 0; x < res; x++) {
+    for (var y = 0; y < res; y++) {
+      quad.at(quadtree, x, y).value = 0.3*perlin(x, y, 1.5, 8);
+    }
+  }
+  quad.precalculate(quadtree);
 
   for (var c = 0; c<35; c++){
     var size = 20 * Math.pow(rand(0.5,1), 2);
