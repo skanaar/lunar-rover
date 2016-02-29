@@ -15,11 +15,31 @@
 				margin: 0px;
 				overflow: hidden;
 			}
+			.buttons {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				background-color: black;
+				text-align: center;
+			}
+			.buttons a, .buttons a:hover, .buttons a:visited, .buttons a:active {
+				display: inline-block;
+				color: white;
+				font-family: sans-serif;
+				font-weight: bold;
+				margin: 4px 10px;
+			}
 		</style>
 	</head>
 	<body>
 
 		<div id="container"><br /><br /><br /><br /><br />Generating world...</div>
+		<div class="buttons" onclick="location.reload()">
+			<a href="#scout">Scout</a>
+			<a href="#ranger">Ranger</a>
+			<a href="#juggernaut">Juggernaut</a>
+		</div>
 		<script src="three.min.js"></script>
 		<script src="OrbitControls.js"></script>
 		<script src="ImprovedNoise.js"></script>

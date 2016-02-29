@@ -31,12 +31,12 @@ function Rover(wheelA, wheelB, wheelC, wheelD, width){
     },
     drawObject: function (){
       var shape = new THREE.Shape([
-        new THREE.Vector2( width/2,-width/16),
-        new THREE.Vector2( width/2, 0),
-        new THREE.Vector2( width/8, width/8),
-        new THREE.Vector2(-width/1.8, width/8),
-        new THREE.Vector2(-width/2, 0),
-        new THREE.Vector2(-width/2,-width/16)
+        new THREE.Vector2( width/2,  -width/16),
+        new THREE.Vector2( width/2,         0 ),
+        new THREE.Vector2( width/8,   width/8 ),
+        new THREE.Vector2(-width/1.8, width/8 ),
+        new THREE.Vector2(-width/2,         0 ),
+        new THREE.Vector2(-width/2,  -width/16)
       ]);
       var extrude = {
         amount: 0,
@@ -45,7 +45,7 @@ function Rover(wheelA, wheelB, wheelC, wheelD, width){
         extrudeMaterial: 0,
         bevelEnabled: true,
         bevelThickness: width/3,
-        bevelSize: 0.2,
+        bevelSize: width*0.1,
         bevelSegments: 1
       };
       var geometry = new THREE.ExtrudeGeometry(shape, extrude);

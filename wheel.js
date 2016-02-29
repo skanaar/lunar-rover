@@ -1,8 +1,8 @@
 function Wheel(x, y, z, r){
-  var groundForce = 1500;
-  var groundFriction = 0.5;
+  var groundForce = 2500;
+  var groundFriction = 0.6;
   var tireGrip = 2.9;
-  var springConstant = 2;
+  var springConstant = 3;
   return {
     _drawObject: null,
     isTouching: false,
