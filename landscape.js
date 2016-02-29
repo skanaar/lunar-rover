@@ -6,11 +6,15 @@ function generateLandscape(res, subdivs){
   }
 
   function addCrater(terrain, x, y, r, height){
+    var centerHeight = quad.at(terrain, x,y).value;
     for (var i = -r; i < r; i++) {
       for (var j = -r; j < r; j++) {
-        if (j+y<1 || j+y>res-1 || i+x<1 || i+x>res-1) continue;
-        var offset = craterOffset(height, Math.sqrt(i*i+j*j)/r);
-        quad.at(terrain, x+i, y+j).value += offset;
+        var coord = Math.sqrt(i*i+j*j) / r;
+        if (coord>1 || j+y<1 || j+y>res-1 || i+x<1 || i+x>res-1) continue;
+        var offset = craterOffset(height, coord);
+        var node = quad.at(terrain, x+i, y+j);
+        var smoothness = 0.75 + 0.25*coord;
+        node.value = offset + (smoothness)*node.value + (1-smoothness)*centerHeight;
       }
     }
   }
