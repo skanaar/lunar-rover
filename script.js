@@ -1,14 +1,15 @@
+var cameraPos = vec.Vec();
+var timestep = 2;
+var showDebug = false;
+var showOverview = false;
+var isPaused = false;
+
 var clock = new THREE.Clock();
 
 var viewer = buildViewer(window.innerWidth,
                          window.innerHeight,
                          window.devicePixelRatio)
 var engine = buildEngine(256, viewer);
-
-var cameraPos = vec.Vec();
-var timestep = 2;
-var showDebug = false;
-var isPaused = false;
 
 init(viewer);
 animate();
@@ -52,8 +53,8 @@ function buildEngine(res) {
 	mesh.receiveShadow = true;
 
   var sun = new THREE.SpotLight(0xffffff, 1, 0, Math.PI / 2);
-  sun.position.set(200, 50, 200);
-  sun.target.position.set(50, 0, 50);
+  sun.position.set(250, 100, 0);
+  sun.target.position.set(0, 0, 0);
 
 	sun.castShadow = true;
 	sun.shadow.camera.near = 100;
@@ -106,6 +107,7 @@ function init(viewer) {
   window.addEventListener('resize', onWindowResize);
   input.onNumber(function(i) { timestep = Math.exp(i/4) / 2 });
   input.on('i', function() { showDebug = !showDebug });
+  input.on(' ', function() { showOverview = !showOverview });
   input.on('p', function() { isPaused = !isPaused });
 }
 
@@ -148,7 +150,8 @@ function updateDebugInfo() {
 function updateChaseCam() {
   var p = vec.clone(engine.rover.obj.pos);
   var dir = engine.rover.dir;
-  var pos = vec.add(p, vec.Vec(dir.x*-10, 10, dir.z*-10));
+  var camDist = showOverview ? 40 : 10;
+  var pos = vec.add(p, vec.Vec(dir.x*-camDist, camDist, dir.z*-camDist));
   vec.multTo(cameraPos, 0.98);
   vec.addTo(cameraPos, pos, 0.02);
   viewer.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
