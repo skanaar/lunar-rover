@@ -69,13 +69,12 @@ var ImprovedNoise = function () {
 	return function(x, y, scale, octaves, falloff){
 		octaves = octaves || 6;
 		falloff = falloff || 2;
-		scale = scale || 1;
-		var amp = 1/falloff;
+		var amp = 1;
 		var value = 0;
 		for(var i=0; i<octaves; i++) {
 			value += amp * noise(x/scale, y/scale, 0.5);
-			amp *= falloff;
-			scale *= 2;
+			amp /= falloff;
+			scale /= falloff;
 		}
 		return value;
 	}

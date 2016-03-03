@@ -7,7 +7,7 @@ var unit = {
   '#scout': 0.25,
   '#ranger': 0.60,
   '#juggernaut': 1.5
-}[location.hash] || 0.75
+}[location.hash] || 0.4
 
 var clock = new THREE.Clock();
 
@@ -121,14 +121,15 @@ function onWindowResize() {
   viewer.camera.updateProjectionMatrix();
   viewer.renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
+var even = true;
 function animate() {
   requestAnimationFrame(animate);
-  update();
+  even = !even;
+  if (even) update();
 }
 
 function simulate(dt, iterations) {
-  var gravity = vec.Vec(0, -500, 0);
+  var gravity = vec.Vec(0, -300, 0);
   var objs = engine.wheels.map(e => e.obj);
   dt *= timestep / iterations;
   for (var i=iterations; i; i--){

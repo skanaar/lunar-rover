@@ -17,7 +17,7 @@
   "esnext": true,
   "asi": true,
   "lastsemic": true,
-  "bitwise": true,
+  "bitwise": false,
   "curly": false,
   "eqeqeq": true,
   "esnext": true,
