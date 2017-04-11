@@ -28,7 +28,13 @@
 				color: white;
 				font-family: sans-serif;
 				font-weight: bold;
-				margin: 4px 10px;
+				margin: 4px 4px;
+			}
+			#instructions {
+				padding: 4px 4px;
+				text-align: center;
+				color: #aaa;
+				font-family: sans-serif;
 			}
 		</style>
 	</head>
@@ -36,6 +42,7 @@
 
 		<div id="container"><br /><br /><br /><br /><br />Generating world...</div>
 		<div class="buttons" onclick="location.reload()">
+			<span id="instructions">Steer with W A S D or arrow keys. Choose one of three rover sizes: </span>
 			<a href="#scout">Scout</a>
 			<a href="#ranger">Ranger</a>
 			<a href="#juggernaut">Juggernaut</a>

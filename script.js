@@ -1,4 +1,4 @@
-var cameraPos = vec.Vec();
+var cameraPos = vec.Vec(100,100,100);
 var timestep = 2;
 var showDebug = false;
 var showOverview = false;
